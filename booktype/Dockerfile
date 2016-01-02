@@ -1,6 +1,6 @@
-from    ubuntu:12.04
+from    debian:testing
 
-run     echo 'deb http://us.archive.ubuntu.com/ubuntu/ precise universe' >> /etc/apt/sources.list
+#run     echo 'deb http://us.archive.ubuntu.com/ubuntu/ precise universe' >> /etc/apt/sources.list
 run     apt-get -y update
 
 # Install supervisord
@@ -11,17 +11,20 @@ run     apt-get -y install python-software-properties
 run     apt-get -y update
 run     apt-get -y install python python-dev sqlite3 git-core python-pip python-virtualenv
 run	apt-get -y install libjpeg-dev zlib1g-dev redis-server libxml2-dev libxslt-dev
-run	apt-get -y install postgresql postgresql-server-dev-9.1
+run	apt-get -y install postgresql postgresql-server-dev-9.4
 
 run	virtualenv --distribute mybooktype
 run 	cd mybooktype
 run	. /mybooktype/bin/activate
 
 run	git clone https://github.com/sourcefabric/Booktype.git /mybooktype/Booktype
-run	pip install -r /mybooktype/Booktype/requirements/postgresql.txt
+#run	pip install -r /mybooktype/Booktype/requirements/postgresql.txt
+run pip install -r /mybooktype/Booktype/requirements/prod.txt
 run	pip install gunicorn
 
-run	/mybooktype/Booktype/scripts/createbooki --database postgresql mybook
+#run	/mybooktype/Booktype/scripts/createbooki --database postgresql mybook
+run	/mybooktype/Booktype/scripts/createbooktype --database postgresql mybook
+
 env	DJANGO_SETTINGS_MODULE mybook.settings
 env	PYTHONPATH $PYTHONPATH://:/mybook/lib/:/mybooktype/Booktype/lib
 env	BOOKTYPE_USER booktype
@@ -38,7 +41,7 @@ add	./settings.py /mybook/settings.py
 
 add     ./run-supervisord /usr/sbin/run-supervisord
 add	./booktype.okfn.org.conf /etc/supervisor/conf.d/booktype.okfn.org.conf
-
+run ln -s  /etc/supervisor/conf.d/booktype.okfn.org.conf /etc/supervisord.conf
 expose  :8000
 
 cmd     ["/usr/sbin/run-supervisord"]
